@@ -5,8 +5,6 @@ Java Code Generator from IR
 Generates Java code from intermediate representation
 """
 
-from typing import Any, Dict, List
-
 from .ir import IRNode
 
 
@@ -126,7 +124,11 @@ class JavaGenerator:
         body = "\n".join(
             [f"        {self._generate_node(stmt)}" for stmt in node["body"]]
         )
-        return f"for (int {target} = 0; {target} < (Integer){iter}; {target}++) {{\n{body}\n    }}"
+        template = (
+            "for (int {target} = 0; {target} < (Integer){iter}; "
+            "{target}++) {{\n{body}\n    }}"
+        )
+        return template.format(target=target, iter=iter, body=body)
 
     def _generate_while(self, node: IRNode) -> str:
         """Generate while loop"""

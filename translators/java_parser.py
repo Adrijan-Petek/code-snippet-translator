@@ -5,7 +5,7 @@ Java Parser for Code Snippet Translator
 Uses javalang to parse Java code and convert to IR
 """
 
-from typing import Any, Dict, List
+from typing import List
 
 import javalang
 

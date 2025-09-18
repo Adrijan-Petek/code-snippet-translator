@@ -9,7 +9,6 @@ from .java_parser import parse_java_to_ir
 from .gen_py import generate_py_from_ir
 from .gen_js import generate_js_from_ir
 from .gen_java import generate_java_from_ir
-from .ir import IRNode
 
 
 def translate_snippet(source_code: str, from_lang: str, to_lang: str) -> str:

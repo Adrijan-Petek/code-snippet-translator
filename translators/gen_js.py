@@ -5,8 +5,6 @@ JavaScript Code Generator from IR
 Generates JavaScript code from intermediate representation
 """
 
-from typing import Any, Dict, List
-
 from .ir import IRNode
 
 
