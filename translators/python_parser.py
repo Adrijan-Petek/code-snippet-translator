@@ -11,6 +11,28 @@ from typing import List
 from .ir import IRBuilder, IRNode
 
 
+def _unparse_ast_node(node):
+    """Fallback unparse function for Python < 3.9 compatibility"""
+    if hasattr(ast, 'unparse'):
+        return ast.unparse(node)
+    else:
+        # Simple fallback for Python 3.8
+        if isinstance(node, ast.Constant):
+            if isinstance(node.value, str):
+                return f'"{node.value}"'
+            elif node.value is None:
+                return 'None'
+            elif isinstance(node.value, bool):
+                return str(node.value).lower()
+            else:
+                return str(node.value)
+        elif isinstance(node, ast.Name):
+            return node.id
+        else:
+            # For more complex expressions, return a placeholder
+            return 'default_value'
+
+
 class PythonToIR(ast.NodeVisitor):
     """Converts Python AST nodes to IR"""
 
@@ -34,7 +56,7 @@ class PythonToIR(ast.NodeVisitor):
                 if arg.arg in [a.arg for a in node.args.args[idx:]]:
                     default_idx = [a.arg for a in node.args.args].index(arg.arg) - idx
                     if default_idx >= 0 and default_idx < len(node.args.defaults):
-                        default = ast.unparse(node.args.defaults[default_idx])
+                        default = _unparse_ast_node(node.args.defaults[default_idx])
             params.append(IRBuilder.param(arg.arg, default))
 
         body = []
