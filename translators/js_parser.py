@@ -8,7 +8,7 @@ Uses Node.js helper to parse JS and convert Babel AST to IR
 import json
 import os
 import subprocess
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Optional
 
 from .ir import IRBuilder, IRNode
 
@@ -45,7 +45,7 @@ class JSToIR:
             )
             if result.returncode != 0:
                 return {"error": result.stderr}
-            return json.loads(result.stdout)
+            return json.loads(result.stdout)  # type: ignore[no-any-return]
         except Exception as e:
             return {"error": str(e)}
 
@@ -58,7 +58,7 @@ class JSToIR:
                 body.append(ir_node)
         return body
 
-    def _convert_node(self, node: Dict[str, Any]) -> IRNode:
+    def _convert_node(self, node: Dict[str, Any]) -> Optional[IRNode]:
         """Convert Babel AST node to IR"""
         node_type = node.get("type")
 
@@ -78,13 +78,10 @@ class JSToIR:
             # Simplified: handle first declarator
             if node.get("declarations"):
                 decl = node["declarations"][0]
+                init_node = self._convert_node(decl["init"]) if decl.get("init") else None
                 return IRBuilder.assign(
                     IRBuilder.name(decl["id"]["name"]),
-                    (
-                        self._convert_node(decl["init"])
-                        if decl.get("init")
-                        else IRBuilder.literal(None)
-                    ),
+                    init_node if init_node is not None else IRBuilder.literal(None),
                 )
         elif node_type == "IfStatement":
             return self._convert_if(node)
@@ -111,9 +108,9 @@ class JSToIR:
                 default_str = str(p["right"].get("value", "undefined"))
                 params.append(IRBuilder.param(param_name, default_str))
         body = [
-            self._convert_node(stmt)
+            ir_stmt
             for stmt in node.get("body", {}).get("body", [])
-            if stmt
+            if stmt and (ir_stmt := self._convert_node(stmt)) is not None
         ]
         return IRBuilder.function(name, params, body)
 
@@ -124,26 +121,32 @@ class JSToIR:
     def _convert_binary_op(self, node: Dict[str, Any]) -> IRNode:
         left = self._convert_node(node["left"])
         right = self._convert_node(node["right"])
+        if left is None or right is None:
+            return IRBuilder.literal(None)  # fallback
         op = node["operator"]
         return IRBuilder.binary_op(op, left, right)
 
     def _convert_if(self, node: Dict[str, Any]) -> IRNode:
         test = self._convert_node(node["test"])
+        if test is None:
+            return IRBuilder.literal(None)  # fallback
         body = [
-            self._convert_node(stmt)
+            ir_stmt
             for stmt in node.get("consequent", {}).get("body", [])
-            if stmt
+            if stmt and (ir_stmt := self._convert_node(stmt)) is not None
         ]
         orelse = []
         if node.get("alternate"):
             if node["alternate"]["type"] == "BlockStatement":
                 orelse = [
-                    self._convert_node(stmt)
+                    ir_stmt
                     for stmt in node["alternate"].get("body", [])
-                    if stmt
+                    if stmt and (ir_stmt := self._convert_node(stmt)) is not None
                 ]
             else:
-                orelse = [self._convert_node(node["alternate"])]
+                alt_node = self._convert_node(node["alternate"])
+                if alt_node is not None:
+                    orelse = [alt_node]
         return IRBuilder.if_stmt(test, body, orelse)
 
     def _convert_for(self, node: Dict[str, Any]) -> IRNode:
@@ -153,38 +156,50 @@ class JSToIR:
             if node.get("init")
             else IRBuilder.name("i")
         )
+        if target is None:
+            target = IRBuilder.name("i")
         iter = (
             self._convert_node(node["test"])
             if node.get("test")
             else IRBuilder.literal(10)
         )  # placeholder
+        if iter is None:
+            iter = IRBuilder.literal(10)
         body = [
-            self._convert_node(stmt)
+            ir_stmt
             for stmt in node.get("body", {}).get("body", [])
-            if stmt
+            if stmt and (ir_stmt := self._convert_node(stmt)) is not None
         ]
         return IRBuilder.for_stmt(target, iter, body)
 
     def _convert_while(self, node: Dict[str, Any]) -> IRNode:
         test = self._convert_node(node["test"])
+        if test is None:
+            return IRBuilder.literal(None)  # fallback
         body = [
-            self._convert_node(stmt)
+            ir_stmt
             for stmt in node.get("body", {}).get("body", [])
-            if stmt
+            if stmt and (ir_stmt := self._convert_node(stmt)) is not None
         ]
         return IRBuilder.while_stmt(test, body)
 
     def _convert_call(self, node: Dict[str, Any]) -> IRNode:
         func = self._convert_node(node["callee"])
-        args = [self._convert_node(arg) for arg in node.get("arguments", [])]
+        if func is None:
+            return IRBuilder.literal(None)  # fallback
+        args = [
+            arg for arg in [
+                self._convert_node(arg) for arg in node.get("arguments", [])
+            ] if arg is not None
+        ]
         return IRBuilder.call(func, args)
 
     def _convert_class(self, node: Dict[str, Any]) -> IRNode:
         name = node["id"]["name"]
         body = [
-            self._convert_node(stmt)
+            ir_stmt
             for stmt in node.get("body", {}).get("body", [])
-            if stmt
+            if stmt and (ir_stmt := self._convert_node(stmt)) is not None
         ]
         return IRBuilder.class_def(name, body)
 

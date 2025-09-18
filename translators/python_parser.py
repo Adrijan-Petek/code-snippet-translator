@@ -6,7 +6,7 @@ Converts Python AST to intermediate representation (IR)
 """
 
 import ast
-from typing import List
+from typing import List, Union
 
 from .ir import IRBuilder, IRNode
 
@@ -81,7 +81,7 @@ class PythonToIR(ast.NodeVisitor):
         return IRBuilder.name(node.id)
 
     def visit_Constant(self, node: ast.Constant) -> IRNode:
-        return IRBuilder.literal(node.value)
+        return IRBuilder.literal(node.value)  # type: ignore
 
     def visit_Assign(self, node: ast.Assign) -> IRNode:
         # Simplified: assume single target
@@ -132,7 +132,7 @@ class PythonToIR(ast.NodeVisitor):
         """Handle expression statements (like docstrings) - skip them for MVP"""
         pass
 
-    def _get_op(self, op: ast.operator) -> str:
+    def _get_op(self, op: Union[ast.operator, ast.cmpop]) -> str:
         """Convert AST operator to string"""
         op_map = {
             ast.Add: "+",

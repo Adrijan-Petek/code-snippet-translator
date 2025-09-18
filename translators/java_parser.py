@@ -5,7 +5,7 @@ Java Parser for Code Snippet Translator
 Uses javalang to parse Java code and convert to IR
 """
 
-from typing import List
+from typing import List, Optional
 
 import javalang
 
@@ -45,9 +45,9 @@ class JavaToIR:
                 if ir_member:
                     body.append(ir_member)
             return IRBuilder.class_def(node.name, body)
-        return None
+        return IRBuilder.literal(None)  # fallback for unsupported types
 
-    def _convert_member(self, node) -> IRNode:
+    def _convert_member(self, node) -> Optional[IRNode]:
         """Convert class member to IR"""
         if isinstance(node, javalang.tree.MethodDeclaration):
             params = [IRBuilder.param(p.name) for p in node.parameters]
@@ -57,13 +57,14 @@ class JavaToIR:
             # Simplified field handling
             if node.declarators:
                 decl = node.declarators[0]
+                init_expr = (
+                    self._convert_expression(decl.initializer)
+                    if decl.initializer
+                    else None
+                )
                 return IRBuilder.assign(
                     IRBuilder.name(decl.name),
-                    (
-                        self._convert_expression(decl.initializer)
-                        if decl.initializer
-                        else IRBuilder.literal(None)
-                    ),
+                    init_expr if init_expr is not None else IRBuilder.literal(None)
                 )
         return None
 
@@ -78,7 +79,7 @@ class JavaToIR:
                 body.append(ir_stmt)
         return body
 
-    def _convert_statement(self, node) -> IRNode:
+    def _convert_statement(self, node) -> Optional[IRNode]:
         """Convert statement to IR"""
         if isinstance(node, javalang.tree.ReturnStatement):
             value = (
@@ -87,6 +88,8 @@ class JavaToIR:
             return IRBuilder.return_stmt(value)
         elif isinstance(node, javalang.tree.IfStatement):
             test = self._convert_expression(node.condition)
+            if test is None:
+                test = IRBuilder.literal(True)  # fallback
             body = self._convert_block(node.then_statement)
             orelse = (
                 self._convert_block(node.else_statement) if node.else_statement else []
@@ -95,26 +98,32 @@ class JavaToIR:
         elif isinstance(node, javalang.tree.ForStatement):
             # Simplified
             target = IRBuilder.name("i")  # placeholder
-            iter = (
+            iter_expr = (
                 self._convert_expression(node.condition)
                 if node.condition
-                else IRBuilder.literal(10)
+                else None
             )
+            iter = iter_expr if iter_expr is not None else IRBuilder.literal(10)
             body = self._convert_block(node.body)
             return IRBuilder.for_stmt(target, iter, body)
         elif isinstance(node, javalang.tree.WhileStatement):
             test = self._convert_expression(node.condition)
+            if test is None:
+                test = IRBuilder.literal(True)  # fallback
             body = self._convert_block(node.body)
             return IRBuilder.while_stmt(test, body)
         elif isinstance(node, javalang.tree.StatementExpression):
-            return self._convert_expression(node.expression)
+            expr = self._convert_expression(node.expression)
+            return expr if expr is not None else IRBuilder.literal(None)
         return None
 
-    def _convert_expression(self, node) -> IRNode:
+    def _convert_expression(self, node) -> Optional[IRNode]:
         """Convert expression to IR"""
         if isinstance(node, javalang.tree.BinaryOperation):
             left = self._convert_expression(node.operandl)
             right = self._convert_expression(node.operandr)
+            if left is None or right is None:
+                return IRBuilder.literal(None)  # fallback
             op = node.operator
             return IRBuilder.binary_op(op, left, right)
         elif isinstance(node, javalang.tree.Literal):
@@ -123,11 +132,17 @@ class JavaToIR:
             return IRBuilder.name(node.member)
         elif isinstance(node, javalang.tree.MethodInvocation):
             func = IRBuilder.name(node.member)
-            args = [self._convert_expression(arg) for arg in node.arguments]
+            args = [
+                arg for arg in [
+                    self._convert_expression(arg) for arg in node.arguments
+                ] if arg is not None
+            ]
             return IRBuilder.call(func, args)
         elif isinstance(node, javalang.tree.Assignment):
             target = self._convert_expression(node.expressionl)
             value = self._convert_expression(node.value)
+            if target is None or value is None:
+                return IRBuilder.literal(None)  # fallback
             return IRBuilder.assign(target, value)
         return IRBuilder.literal(str(node))  # fallback
 

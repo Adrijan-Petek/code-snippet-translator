@@ -5,6 +5,8 @@ Python Code Generator from IR
 Generates Python code from intermediate representation
 """
 
+from typing import cast
+
 from .ir import IRNode
 
 
@@ -29,7 +31,7 @@ class PyGenerator:
 
     def _generate_node(self, node: IRNode) -> str:
         """Generate code for a single IR node"""
-        node_type = node["type"]
+        node_type = cast(str, node["type"])
 
         if node_type == "Function":
             return self._generate_function(node)
@@ -54,7 +56,7 @@ class PyGenerator:
         elif node_type == "Class":
             return self._generate_class(node)
 
-        return f"# Unsupported: {node_type}"
+        return "# Unsupported: " + str(node_type)
 
     def _generate_function(self, node: IRNode) -> str:
         """Generate function code"""

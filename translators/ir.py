@@ -29,7 +29,7 @@ class IRBuilder:
         return {"name": name, "default": default}
 
     @staticmethod
-    def return_stmt(value: IRNode) -> IRNode:
+    def return_stmt(value: Optional[IRNode]) -> IRNode:
         return {"type": "Return", "value": value}
 
     @staticmethod
@@ -78,4 +78,4 @@ def serialize_ir(ir: IRNode) -> str:
 
 def deserialize_ir(json_str: str) -> IRNode:
     """Deserialize JSON string to IR"""
-    return json.loads(json_str)
+    return json.loads(json_str)  # type: ignore
