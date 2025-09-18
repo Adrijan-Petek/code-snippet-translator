@@ -78,7 +78,9 @@ class JSToIR:
             # Simplified: handle first declarator
             if node.get("declarations"):
                 decl = node["declarations"][0]
-                init_node = self._convert_node(decl["init"]) if decl.get("init") else None
+                init_node = (
+                    self._convert_node(decl["init"]) if decl.get("init") else None
+                )
                 return IRBuilder.assign(
                     IRBuilder.name(decl["id"]["name"]),
                     init_node if init_node is not None else IRBuilder.literal(None),
@@ -188,9 +190,9 @@ class JSToIR:
         if func is None:
             return IRBuilder.literal(None)  # fallback
         args = [
-            arg for arg in [
-                self._convert_node(arg) for arg in node.get("arguments", [])
-            ] if arg is not None
+            arg
+            for arg in [self._convert_node(arg) for arg in node.get("arguments", [])]
+            if arg is not None
         ]
         return IRBuilder.call(func, args)
 

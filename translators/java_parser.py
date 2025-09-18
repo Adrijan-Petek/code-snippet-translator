@@ -64,7 +64,7 @@ class JavaToIR:
                 )
                 return IRBuilder.assign(
                     IRBuilder.name(decl.name),
-                    init_expr if init_expr is not None else IRBuilder.literal(None)
+                    init_expr if init_expr is not None else IRBuilder.literal(None),
                 )
         return None
 
@@ -99,9 +99,7 @@ class JavaToIR:
             # Simplified
             target = IRBuilder.name("i")  # placeholder
             iter_expr = (
-                self._convert_expression(node.condition)
-                if node.condition
-                else None
+                self._convert_expression(node.condition) if node.condition else None
             )
             iter = iter_expr if iter_expr is not None else IRBuilder.literal(10)
             body = self._convert_block(node.body)
@@ -133,9 +131,9 @@ class JavaToIR:
         elif isinstance(node, javalang.tree.MethodInvocation):
             func = IRBuilder.name(node.member)
             args = [
-                arg for arg in [
-                    self._convert_expression(arg) for arg in node.arguments
-                ] if arg is not None
+                arg
+                for arg in [self._convert_expression(arg) for arg in node.arguments]
+                if arg is not None
             ]
             return IRBuilder.call(func, args)
         elif isinstance(node, javalang.tree.Assignment):
