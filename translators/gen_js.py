@@ -41,7 +41,7 @@ class JSGenerator:
         elif node_type == "BinaryOp":
             return self._generate_binary_op(node)
         elif node_type == "Name":
-            return node["id"]
+            return str(node["id"])
         elif node_type == "Literal":
             return self._generate_literal(node)
         elif node_type == "Assign":
