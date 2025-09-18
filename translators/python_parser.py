@@ -13,7 +13,7 @@ from .ir import IRBuilder, IRNode
 
 def _unparse_ast_node(node):
     """Fallback unparse function for Python < 3.9 compatibility"""
-    if hasattr(ast, 'unparse'):
+    if hasattr(ast, "unparse"):
         return ast.unparse(node)
     else:
         # Simple fallback for Python 3.8
@@ -21,7 +21,7 @@ def _unparse_ast_node(node):
             if isinstance(node.value, str):
                 return f'"{node.value}"'
             elif node.value is None:
-                return 'None'
+                return "None"
             elif isinstance(node.value, bool):
                 return str(node.value).lower()
             else:
@@ -30,7 +30,7 @@ def _unparse_ast_node(node):
             return node.id
         else:
             # For more complex expressions, return a placeholder
-            return 'default_value'
+            return "default_value"
 
 
 class PythonToIR(ast.NodeVisitor):
