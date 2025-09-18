@@ -9,6 +9,7 @@ import javalang
 from typing import Any, Dict, List
 from .ir import IRBuilder, IRNode
 
+
 class JavaToIR:
     """Converts Java code to IR using javalang"""
 
@@ -56,7 +57,11 @@ class JavaToIR:
                 decl = node.declarators[0]
                 return IRBuilder.assign(
                     IRBuilder.name(decl.name),
-                    self._convert_expression(decl.initializer) if decl.initializer else IRBuilder.literal(None)
+                    (
+                        self._convert_expression(decl.initializer)
+                        if decl.initializer
+                        else IRBuilder.literal(None)
+                    ),
                 )
         return None
 
@@ -74,17 +79,25 @@ class JavaToIR:
     def _convert_statement(self, node) -> IRNode:
         """Convert statement to IR"""
         if isinstance(node, javalang.tree.ReturnStatement):
-            value = self._convert_expression(node.expression) if node.expression else None
+            value = (
+                self._convert_expression(node.expression) if node.expression else None
+            )
             return IRBuilder.return_stmt(value)
         elif isinstance(node, javalang.tree.IfStatement):
             test = self._convert_expression(node.condition)
             body = self._convert_block(node.then_statement)
-            orelse = self._convert_block(node.else_statement) if node.else_statement else []
+            orelse = (
+                self._convert_block(node.else_statement) if node.else_statement else []
+            )
             return IRBuilder.if_stmt(test, body, orelse)
         elif isinstance(node, javalang.tree.ForStatement):
             # Simplified
-            target = IRBuilder.name('i')  # placeholder
-            iter = self._convert_expression(node.condition) if node.condition else IRBuilder.literal(10)
+            target = IRBuilder.name("i")  # placeholder
+            iter = (
+                self._convert_expression(node.condition)
+                if node.condition
+                else IRBuilder.literal(10)
+            )
             body = self._convert_block(node.body)
             return IRBuilder.for_stmt(target, iter, body)
         elif isinstance(node, javalang.tree.WhileStatement):
@@ -115,6 +128,7 @@ class JavaToIR:
             value = self._convert_expression(node.value)
             return IRBuilder.assign(target, value)
         return IRBuilder.literal(str(node))  # fallback
+
 
 def parse_java_to_ir(source_code: str) -> IRNode:
     """Convenience function to parse Java code to IR"""

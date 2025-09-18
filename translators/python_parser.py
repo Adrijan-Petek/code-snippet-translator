@@ -9,6 +9,7 @@ import ast
 from typing import Any, List, Dict
 from .ir import IRBuilder, IRNode
 
+
 class PythonToIR(ast.NodeVisitor):
     """Converts Python AST nodes to IR"""
 
@@ -111,16 +112,16 @@ class PythonToIR(ast.NodeVisitor):
     def _get_op(self, op: ast.operator) -> str:
         """Convert AST operator to string"""
         op_map = {
-            ast.Add: '+',
-            ast.Sub: '-',
-            ast.Mult: '*',
-            ast.Div: '/',
-            ast.Eq: '==',
-            ast.NotEq: '!=',
-            ast.Lt: '<',
-            ast.Gt: '>',
-            ast.LtE: '<=',
-            ast.GtE: '>=',
+            ast.Add: "+",
+            ast.Sub: "-",
+            ast.Mult: "*",
+            ast.Div: "/",
+            ast.Eq: "==",
+            ast.NotEq: "!=",
+            ast.Lt: "<",
+            ast.Gt: ">",
+            ast.LtE: "<=",
+            ast.GtE: ">=",
         }
         return op_map.get(type(op), str(op))
 
@@ -128,6 +129,7 @@ class PythonToIR(ast.NodeVisitor):
         """Fallback for unsupported nodes"""
         # For MVP, skip unsupported constructs
         pass
+
 
 def parse_python_to_ir(source_code: str) -> IRNode:
     """Convenience function to parse Python code to IR"""
