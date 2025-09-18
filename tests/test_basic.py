@@ -4,6 +4,7 @@ Basic tests for Code Snippet Translator
 """
 
 import pytest
+
 from translators import translate_snippet
 
 

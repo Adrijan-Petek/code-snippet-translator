@@ -6,7 +6,8 @@ Converts Python AST to intermediate representation (IR)
 """
 
 import ast
-from typing import Any, List, Dict
+from typing import Any, Dict, List
+
 from .ir import IRBuilder, IRNode
 
 

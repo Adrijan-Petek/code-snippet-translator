@@ -6,8 +6,8 @@ This module defines the structure for the language-agnostic IR used to represent
 code snippets before translation to target languages.
 """
 
-from typing import Any, Dict, List, Optional, Union
 import json
+from typing import Any, Dict, List, Optional, Union
 
 # IR Node Types
 IRNode = Dict[str, Any]

@@ -5,10 +5,11 @@ JavaScript Parser for Code Snippet Translator
 Uses Node.js helper to parse JS and convert Babel AST to IR
 """
 
-import subprocess
 import json
 import os
+import subprocess
 from typing import Any, Dict, List
+
 from .ir import IRBuilder, IRNode
 
 

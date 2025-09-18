@@ -6,6 +6,7 @@ Translate code snippets between Python, JavaScript, and Java
 """
 
 import click
+
 from translators import translate_snippet
 
 
