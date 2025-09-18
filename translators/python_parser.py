@@ -5,9 +5,8 @@ Python Parser for Code Snippet Translator
 Converts Python AST to intermediate representation (IR)
 """
 
-from typing import List
-
 import ast
+from typing import List
 
 from .ir import IRBuilder, IRNode
 
