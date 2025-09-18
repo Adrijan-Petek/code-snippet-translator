@@ -7,6 +7,7 @@ Uses Node.js helper to parse JS and convert Babel AST to IR
 
 import subprocess
 import json
+import os
 from typing import Any, Dict, List
 from .ir import IRBuilder, IRNode
 
@@ -28,12 +29,15 @@ class JSToIR:
     def _get_ast_json(self) -> Dict[str, Any]:
         """Get AST JSON from Node.js parser"""
         try:
+            # Get the absolute path to the tools directory
+            tools_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'tools')
+            script_path = os.path.join(tools_dir, 'parse_js.js')
+            
             result = subprocess.run(
-                ['node', 'tools/parse_js.js'],
+                ['node', script_path],
                 input=self.source_code,
                 text=True,
-                capture_output=True,
-                cwd='c:\\Users\\Mobb\\Downloads\\code-snippet-translator'
+                capture_output=True
             )
             if result.returncode != 0:
                 return {'error': result.stderr}
