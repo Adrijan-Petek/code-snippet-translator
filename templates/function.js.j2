@@ -1,0 +1,5 @@
+function {{ name }}({% for param in params %}{{ param.name }}{% if param.default %} = {{ param.default }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}) {
+{% for stmt in body %}
+  {{ render_stmt(stmt) }}
+{% endfor %}
+}
